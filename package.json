@@ -1,0 +1,7 @@
+{
+  "name":"ai-video-creator",
+  "private":true,
+  "workspaces":["apps/*","packages/*"],
+  "scripts":{"dev":"concurrently \"npm run dev -w apps/api\" \"npm run dev -w apps/web\"","build":"npm run build -w packages/shared && npm run build -w apps/api && npm run build -w apps/web","test":"npm run test -w apps/api"},
+  "devDependencies":{"concurrently":"^9.1.0"}
+}
