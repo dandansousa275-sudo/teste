@@ -1,0 +1,9 @@
+import {randomUUID} from "crypto";
+export class MockLLM implements import("./interfaces").LLMProvider{
+async generateScript(i:any){return `Introdução: ${i.title}.\\n\\nDesenvolvimento: uma narrativa visual clara e adequada a aproximadamente ${i.duration} minutos.\\n\\nConclusão: retomamos a ideia principal e encerramos a história.`}
+async breakScenes(script:string){return script.split(/\\n\\n+/).filter(Boolean).map((n,i)=>({id:i+1,narration:n,visual_description:`Cena cinematográfica representando: ${n.slice(0,120)}`,estimated_duration:7,context:"",characters:[],environment:"",era:"contemporânea",visual_style:"cinematic"}))}
+async generateImagePrompt(scene:any,b:any){return `Cinematic frame, ${scene.visual_description}. Consistent characters and locations from visual bible. Lighting, composition, camera depth, atmosphere, professional visual storytelling. No text or letters.`}
+async generateAnimationPrompt(scene:any){return `Preserve the original composition and character identity. Slow cinematic camera movement, subtle depth, natural environmental motion, gentle lighting changes, ${scene.estimated_duration}s.`}}
+export class MockImage implements import("./interfaces").ImageProvider{async generate(prompt:string){return{id:randomUUID(),url:"/assets/mock-image.svg"}}}
+export class MockVideo implements import("./interfaces").VideoProvider{async generate(imageUrl:string,prompt:string,duration:number){return{id:randomUUID(),url:"/assets/mock-video.mp4"}}}
+export class MockTTS implements import("./interfaces").TTSProvider{async synthesize(text:string,options:any){return{id:randomUUID(),url:"/assets/mock-audio.wav",duration:Math.max(2,text.length/14)}}}
