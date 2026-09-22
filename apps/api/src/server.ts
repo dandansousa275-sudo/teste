@@ -1,0 +1,13 @@
+import "dotenv/config"; import express from "express"; import cors from "cors"; import rateLimit from "express-rate-limit"; import * as p from "./services/projectService"; import * as pipe from "./services/pipeline";
+const app=express();app.use(cors({origin:process.env.CORS_ORIGIN||"http://localhost:5173"}));app.use(express.json({limit:"2mb"}));app.use(rateLimit({windowMs:60000,max:120}));
+app.get("/health",(_,res)=>res.json({ok:true}));
+app.get("/projects",(_,res)=>res.json(p.list()));
+app.post("/projects",(req,res)=>res.status(201).json(p.create(req.body)));
+app.get("/projects/:id",(req,res)=>{const x=p.get(req.params.id);x?res.json(x):res.status(404).json({error:"Projeto não encontrado"})});
+app.put("/projects/:id",(req,res)=>{const x=p.update(req.params.id,req.body);x?res.json(x):res.status(404).json({error:"Projeto não encontrado"})});
+app.delete("/projects/:id",(req,res)=>{try{require("./db").db.prepare("DELETE FROM scenes WHERE project_id=?").run(req.params.id);require("./db").db.prepare("DELETE FROM projects WHERE id=?").run(req.params.id);res.status(204).end()}catch(e){res.status(500).json({error:"Falha ao excluir"})}});
+const actions:any={ "generate-script":pipe.generateScript,"generate-scenes":pipe.generateScenes,"generate-images":pipe.generateImages,"generate-animation-prompts":pipe.generateAnimations,"generate-videos":pipe.generateAnimations,"generate-narration":pipe.generateNarration,"render":pipe.render,"generate-all":pipe.auto};
+for(const [route,fn] of Object.entries(actions))app.post("/projects/:id/"+route,async(req,res)=>{try{res.json(await (fn as any)(req.params.id))}catch(e:any){res.status(400).json({error:e.message})}});
+app.get("/projects/:id/progress",(req,res)=>{const x=p.get(req.params.id);x?res.json({status:x.status,progress:x.progress}):res.status(404).json({error:"Projeto não encontrado"})});
+for(const type of ["image","video","audio"])app.post("/scenes/:id/regenerate-"+type,async(req,res)=>{try{res.json(await pipe.regenerateScene(Number(req.params.id),type))}catch(e:any){res.status(400).json({error:e.message})}});
+const port=Number(process.env.PORT||3001);app.listen(port,()=>console.log(`AI Video Creator API on :${port}`));
