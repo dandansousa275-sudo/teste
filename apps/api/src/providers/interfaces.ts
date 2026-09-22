@@ -1,0 +1,4 @@
+export interface LLMProvider{generateScript(input:{title:string;language:string;style:string;duration:number}):Promise<string>;breakScenes(script:string,context:string):Promise<any[]>;generateImagePrompt(scene:any,visualBible:any):Promise<string>;generateAnimationPrompt(scene:any):Promise<string>}
+export interface ImageProvider{generate(prompt:string,options?:any):Promise<{id:string;url:string}>}
+export interface VideoProvider{generate(imageUrl:string,prompt:string,duration:number):Promise<{id:string;url:string}>}
+export interface TTSProvider{synthesize(text:string,options:any):Promise<{id:string;url:string;duration:number}>}
