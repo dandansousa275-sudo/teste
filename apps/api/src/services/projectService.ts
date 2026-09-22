@@ -1,0 +1,8 @@
+import {randomUUID} from "crypto"; import {db} from "../db";
+const defaults={language:"pt-BR",videoStyle:"documentário",visualStyle:"cinematic",voice:"default",speed:1,backgroundMusic:true,subtitles:true,resolution:"1920x1080",fps:30,quality:"high",automatic:false};
+export function list(){return db.prepare("SELECT * FROM projects ORDER BY created_at DESC").all().map(map)}
+export function get(id:string){const p=db.prepare("SELECT * FROM projects WHERE id=?").get(id) as any;if(!p)return null;const scenes=db.prepare("SELECT * FROM scenes WHERE project_id=? ORDER BY id").all(id).map((s:any)=>({...s,characters:JSON.parse(s.characters||"[]")}));return {...map(p),scenes}}
+export function create(input:any){const id=randomUUID(),now=new Date().toISOString(),settings={...defaults,...input.settings};db.prepare("INSERT INTO projects VALUES(?,?,?,?,?,?,?,?,?,?,?)").run(id,input.title||"Sem título",input.mode||"title",input.script||"", "draft",0,0,JSON.stringify(settings),JSON.stringify({characters:[],locations:[],objects:[],visual_style:settings.visualStyle,color_style:"",camera_style:""}),now,now);return get(id)}
+export function update(id:string,input:any){const p=get(id);if(!p)return null;db.prepare("UPDATE projects SET title=?,script=?,settings=?,updated_at=? WHERE id=?").run(input.title??p.title,input.script??p.script,JSON.stringify(input.settings??p.settings),new Date().toISOString(),id);return get(id)}
+export function setStatus(id:string,status:string,progress:number){db.prepare("UPDATE projects SET status=?,progress=?,updated_at=? WHERE id=?").run(status,progress,new Date().toISOString(),id)}
+export function map(p:any){return {...p,settings:JSON.parse(p.settings||"{}"),createdAt:p.created_at,updatedAt:p.updated_at,scenes:[]}}
